@@ -35,7 +35,6 @@ public class OrderServiceImpl implements IOrderService {
         Cart cart = cartRepository.findById(cartId)
                 .orElseThrow(() -> new RuntimeException("Cart not found"));
 
-
         if (cart.getCartItems().isEmpty()) {
             throw new RuntimeException("Cart is empty");
         }
@@ -48,7 +47,6 @@ public class OrderServiceImpl implements IOrderService {
 
         List<OrderItem> orderItems = new ArrayList<>();
         for (CartItem cartItem : cart.getCartItems()) {
-
             Product product = productRepository.findById(
                     cartItem.getProduct().getId()
             ).orElseThrow(() -> new RuntimeException("Product not found"));
@@ -59,15 +57,14 @@ public class OrderServiceImpl implements IOrderService {
                 );
             }
         }
+
         for (CartItem cartItem : cart.getCartItems()) {
 
             Product product = productRepository.findById(
                     cartItem.getProduct().getId()
             ).orElseThrow();
 
-            product.setStock(
-                    product.getStock() - cartItem.getQuantity()
-            );
+            product.setStock(product.getStock() - cartItem.getQuantity());
             productRepository.save(product);
 
             OrderItem orderItem = new OrderItem();
@@ -83,14 +80,24 @@ public class OrderServiceImpl implements IOrderService {
         order.setOrderItems(orderItems);
         Order savedOrder = orderRepository.save(order);
 
-
-        // Sepeti temizle
+        // sepeti temizle
         cart.getCartItems().clear();
         cart.setTotalPrice(0);
         cartRepository.save(cart);
 
         DtoOrder dtoOrder = new DtoOrder();
-        BeanUtils.copyProperties(savedOrder, dtoOrder);
+        dtoOrder.setTotalPrice(savedOrder.getTotalPrice());
+
+        List<DtoOrderItem> dtoItems = new ArrayList<>();
+        for (OrderItem oi : savedOrder.getOrderItems()) {
+            DtoOrderItem dtoItem = new DtoOrderItem();
+            dtoItem.setProductName(oi.getProductName());
+            dtoItem.setUnitPrice(oi.getUnitPrice());
+            dtoItem.setTotalPrice(oi.getUnitPrice() * oi.getQuantity());
+            dtoItems.add(dtoItem);
+        }
+
+        dtoOrder.setOrderItems(dtoItems);
         return dtoOrder;
     }
 
@@ -135,7 +142,18 @@ public class OrderServiceImpl implements IOrderService {
         List<DtoOrder> dtoOrders = new ArrayList<>();
         for (Order order : orders) {
             DtoOrder dtoOrder = new DtoOrder();
-            BeanUtils.copyProperties(order,dtoOrder);
+
+            dtoOrder.setTotalPrice(order.getTotalPrice());
+
+            List<DtoOrderItem> items = new ArrayList<>();
+            for (OrderItem oi : order.getOrderItems()) {
+                DtoOrderItem dto = new DtoOrderItem();
+                dto.setProductName(oi.getProductName());
+                dto.setUnitPrice(oi.getUnitPrice());
+                dto.setTotalPrice(oi.getUnitPrice() * oi.getQuantity());
+                items.add(dto);
+            }
+            dtoOrder.setOrderItems(items);
             dtoOrders.add(dtoOrder);
         }
 

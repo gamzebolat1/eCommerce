@@ -1,6 +1,7 @@
 package com.gamzebolat.service.impl;
 
 import com.gamzebolat.Dto.DtoCart;
+import com.gamzebolat.Dto.DtoCartItem;
 import com.gamzebolat.entity.Cart;
 import com.gamzebolat.entity.CartItem;
 import com.gamzebolat.entity.Product;
@@ -30,12 +31,27 @@ public class CartServiceImpl implements ICartService {
     }
 
     @Override
-    public DtoCart getCart(int Id) {
-         Optional<Cart> cart =cartRepository.findById(Id);
-         DtoCart dtoCart = new DtoCart();
-        BeanUtils.copyProperties(cart.get(),dtoCart);
+    public DtoCart getCart(int id) {
+
+        Cart cart = cartRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Cart not found"));
+
+        DtoCart dtoCart = new DtoCart();
+        dtoCart.setTotalPrice(cart.getTotalPrice());
+
+        List<DtoCartItem> dtoItems = new ArrayList<>();
+        for (CartItem cartItem : cart.getCartItems()) {
+            DtoCartItem dtoItem = new DtoCartItem();
+            dtoItem.setProductName(cartItem.getProduct().getProductName());
+            dtoItem.setQuantity(cartItem.getQuantity());
+            dtoItem.setUnitPrice(cartItem.getUnitPrice());
+            dtoItems.add(dtoItem);
+        }
+
+        dtoCart.setCartItems(dtoItems);
         return dtoCart;
     }
+
 
     @Override
     public DtoCart AddProductToCart(int cartId,int productId) {
@@ -65,9 +81,9 @@ public class CartServiceImpl implements ICartService {
             cartItem.setProduct(product);
             cartItem.setQuantity(1);
             cartItem.setUnitPrice(product.getPrice());
-
-            cartItemRepository.save(cartItem);
             cart.getCartItems().add(cartItem);
+            cartItemRepository.save(cartItem);
+
 
         }
 
@@ -80,6 +96,17 @@ public class CartServiceImpl implements ICartService {
 
         DtoCart dto = new DtoCart();
         dto.setTotalPrice(cart.getTotalPrice());
+
+        List<DtoCartItem> dtoItems = new ArrayList<>();
+        for (CartItem ci : cart.getCartItems()) {
+            DtoCartItem dtoItem = new DtoCartItem();
+            dtoItem.setProductName(ci.getProduct().getProductName());
+            dtoItem.setQuantity(ci.getQuantity());
+            dtoItem.setUnitPrice(ci.getUnitPrice());
+            dtoItems.add(dtoItem);
+        }
+
+        dto.setCartItems(dtoItems);
         return dto;
     }
 

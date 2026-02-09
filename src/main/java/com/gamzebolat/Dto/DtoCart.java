@@ -13,5 +13,5 @@ import java.util.List;
 @AllArgsConstructor
 public class DtoCart {
     private double totalPrice;
-    private List<CartItem> CartItems;
+    private List<DtoCartItem> CartItems;
 }
