@@ -112,9 +112,9 @@ public class OrderServiceImpl implements IOrderService {
            }
            for (OrderItem orderItem : order.getOrderItems()) {
                DtoOrderItem dtoOrderItem=new DtoOrderItem();
-               dtoOrderItem.setProductName(orderItem.getProduct().getProductName());
+               dtoOrderItem.setProductName(orderItem.getProductName());
                dtoOrderItem.setUnitPrice(orderItem.getUnitPrice());
-
+               dtoOrderItem.setTotalPrice(orderItem.getUnitPrice() * orderItem.getQuantity());
 
                dtoOrder.getOrderItems().add(dtoOrderItem);
            }
