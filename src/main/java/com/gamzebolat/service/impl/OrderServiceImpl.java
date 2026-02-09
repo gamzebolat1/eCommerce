@@ -6,6 +6,7 @@ import com.gamzebolat.entity.*;
 import com.gamzebolat.repository.CartRepository;
 import com.gamzebolat.repository.CustomerRepository;
 import com.gamzebolat.repository.OrderRepository;
+import com.gamzebolat.repository.ProductRepository;
 import com.gamzebolat.service.IOrderService;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
@@ -19,17 +20,17 @@ public class OrderServiceImpl implements IOrderService {
     private final OrderRepository orderRepository;
     private final CartRepository cartRepository;
     private final CustomerRepository customerRepository;
+    private final ProductRepository productRepository;
 
-    public OrderServiceImpl(OrderRepository orderRepository, CartRepository cartRepository, CustomerRepository customerRepository) {
+    public OrderServiceImpl(OrderRepository orderRepository, CartRepository cartRepository, CustomerRepository customerRepository, ProductRepository productRepository) {
         this.orderRepository = orderRepository;
         this.cartRepository = cartRepository;
         this.customerRepository = customerRepository;
+        this.productRepository = productRepository;
     }
 
     @Override
     public DtoOrder placeOrder(int cartId) {
-
-        System.out.println("🔍 Looking for cart with ID: " + cartId);
 
         Cart cart = cartRepository.findById(cartId)
                 .orElseThrow(() -> new RuntimeException("Cart not found"));
@@ -45,17 +46,37 @@ public class OrderServiceImpl implements IOrderService {
         order.setOrderDate(new Date());
         order.setOrderCode(UUID.randomUUID().toString());
 
-        // 🔥 EN ÖNEMLİ SATIR
-
-
         List<OrderItem> orderItems = new ArrayList<>();
         for (CartItem cartItem : cart.getCartItems()) {
+
+            Product product = productRepository.findById(
+                    cartItem.getProduct().getId()
+            ).orElseThrow(() -> new RuntimeException("Product not found"));
+
+            if (product.getStock() < cartItem.getQuantity()) {
+                throw new RuntimeException(
+                        product.getProductName() + " için yeterli stok yok"
+                );
+            }
+        }
+        for (CartItem cartItem : cart.getCartItems()) {
+
+            Product product = productRepository.findById(
+                    cartItem.getProduct().getId()
+            ).orElseThrow();
+
+            product.setStock(
+                    product.getStock() - cartItem.getQuantity()
+            );
+            productRepository.save(product);
+
             OrderItem orderItem = new OrderItem();
-            orderItem.setProduct(cartItem.getProduct());
-            orderItem.setProductName(cartItem.getProduct().getProductName());
+            orderItem.setOrder(order);
+            orderItem.setProduct(product);
+            orderItem.setProductName(product.getProductName());
             orderItem.setQuantity(cartItem.getQuantity());
             orderItem.setUnitPrice(cartItem.getUnitPrice());
-            orderItem.setOrder(order);
+
             orderItems.add(orderItem);
         }
 
