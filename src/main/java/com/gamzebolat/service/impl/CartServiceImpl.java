@@ -67,7 +67,7 @@ public class CartServiceImpl implements ICartService {
 
         Optional<CartItem> cartItemOpt = cartItemRepository.findByCartAndProduct(cart, product);
 
-        double totalPrice = 0; // toplam fiyatı başlat
+        double totalPrice = 0;
 
         if (cartItemOpt.isPresent()) {
             CartItem cartItem = cartItemOpt.get();
@@ -132,7 +132,7 @@ public class CartServiceImpl implements ICartService {
             }
         }
 
-        // totalPrice hesaplamak için veritabanından güncel cartItems al
+
         List<CartItem> items = cartItemRepository.findAllByCart(cart);
         double totalPrice = 0;
         for (CartItem item : items) {
