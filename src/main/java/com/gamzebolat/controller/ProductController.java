@@ -4,6 +4,7 @@ import com.gamzebolat.Dto.DtoCustomer;
 import com.gamzebolat.Dto.DtoProduct;
 import com.gamzebolat.entity.Customer;
 import com.gamzebolat.entity.Product;
+import com.gamzebolat.facade.CustomerFacade;
 import com.gamzebolat.service.impl.ProductServiceImpl;
 import org.springframework.web.bind.annotation.*;
 
@@ -11,10 +12,12 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/product")
 public class ProductController {
     private final ProductServiceImpl productService;
+    private final CustomerFacade customerFacade;
 
 
-    public ProductController(ProductServiceImpl productService) {
+    public ProductController(ProductServiceImpl productService, CustomerFacade customerFacade) {
         this.productService = productService;
+        this.customerFacade = customerFacade;
     }
 
     @PostMapping(path = "/create")
@@ -39,6 +42,6 @@ public class ProductController {
 
     @PostMapping(path = "/addCustomer")
     public DtoCustomer AddCustomer(@RequestBody Customer customer){
-        return productService.AddCustomer(customer);
+        return customerFacade.AddCustomer(customer);
     }
 }

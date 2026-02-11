@@ -10,5 +10,4 @@ public interface IProductService {
     public DtoProduct getProduct(int Id);
     public DtoProduct updateProduct(int Id , Product newProduct);
     public void deleteProduct(int Id);
-    public DtoCustomer AddCustomer(Customer customer);
 }

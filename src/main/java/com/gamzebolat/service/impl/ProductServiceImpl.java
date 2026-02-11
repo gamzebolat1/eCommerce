@@ -20,12 +20,12 @@ import java.util.Optional;
 public class ProductServiceImpl implements IProductService {
     private final ProductRepository productRepository;
     private final CustomerRepository customerRepository;
-    private final CartRepository cartRepository;
+
 
     public ProductServiceImpl(ProductRepository productRepository, CustomerRepository customerRepository, CartRepository cartRepository) {
         this.productRepository = productRepository;
         this.customerRepository = customerRepository;
-        this.cartRepository = cartRepository;
+
     }
 
 
@@ -83,26 +83,6 @@ public class ProductServiceImpl implements IProductService {
         }
     }
 
-    @Override
-    @Transactional
-    public DtoCustomer AddCustomer(Customer customer) {
 
-        Customer newCustomer = new Customer();
-        newCustomer.setUsername(customer.getUsername());
-        newCustomer.setOrders(new ArrayList<>());
 
-        Cart cart = new Cart();
-        cart.setTotalPrice(0.0);
-        cart.setCartItems(new ArrayList<>());
-
-        cart.setCustomer(newCustomer);
-        newCustomer.setCart(cart);
-
-        Customer savedCustomer = customerRepository.save(newCustomer);
-
-        DtoCustomer dtoCustomer = new DtoCustomer();
-        BeanUtils.copyProperties(savedCustomer, dtoCustomer);
-
-        return dtoCustomer;
-    }
 }

@@ -1,6 +1,7 @@
 package com.gamzebolat.controller;
 
 import com.gamzebolat.Dto.DtoOrder;
+import com.gamzebolat.facade.OrderFacade;
 import com.gamzebolat.service.IOrderService;
 import org.springframework.web.bind.annotation.*;
 
@@ -11,14 +12,16 @@ import java.util.List;
 
 public class OrderController {
     private final IOrderService orderService;
+    private final OrderFacade orderFacade;
 
-    public OrderController(IOrderService orderService) {
+    public OrderController(IOrderService orderService, OrderFacade orderFacade) {
         this.orderService = orderService;
+        this.orderFacade = orderFacade;
     }
 
     @PostMapping("/placeOrder/{cartId}")
     public DtoOrder placeOrder(@PathVariable(name = "cartId") int cartId) {
-        return orderService.placeOrder(cartId);
+        return orderFacade.placeOrder(cartId);
     }
 
     @GetMapping("/getOrderForCode/{orderCode}")
