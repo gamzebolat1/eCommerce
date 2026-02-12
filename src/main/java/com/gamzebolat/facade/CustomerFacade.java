@@ -5,6 +5,8 @@ import com.gamzebolat.entity.Cart;
 import com.gamzebolat.entity.Customer;
 import com.gamzebolat.repository.CartRepository;
 import com.gamzebolat.repository.CustomerRepository;
+import com.gamzebolat.service.ICartService;
+import com.gamzebolat.service.ICustomerService;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,31 +16,23 @@ import java.util.ArrayList;
 @Service
 public class CustomerFacade {
 
-    private final CustomerRepository customerRepository;
+    private final  ICustomerService customerService;
+    private final ICartService cartService;
 
-    public CustomerFacade(CustomerRepository customerRepository, CartRepository cartRepository) {
-        this.customerRepository = customerRepository;
+    public CustomerFacade(  ICustomerService customerService, ICartService cartService) {
+        this.customerService = customerService;
+        this.cartService = cartService;
     }
 
     @Transactional
-    public DtoCustomer AddCustomer(Customer customer) {
+    public DtoCustomer addCustomer(Customer customer) {
 
-        Customer newCustomer = new Customer();
-        newCustomer.setUsername(customer.getUsername());
-        newCustomer.setOrders(new ArrayList<>());
-
-        Cart cart = new Cart();
-        cart.setTotalPrice(0.0);
-        cart.setCartItems(new ArrayList<>());
-
-        cart.setCustomer(newCustomer);
-        newCustomer.setCart(cart);
-
-        Customer savedCustomer = customerRepository.save(newCustomer);
-
+        Customer savedCustomer=customerService.CreateCustomer(customer);
+        cartService.createCartForCustomer(savedCustomer);
         DtoCustomer dtoCustomer = new DtoCustomer();
         BeanUtils.copyProperties(savedCustomer, dtoCustomer);
 
         return dtoCustomer;
+
     }
 }

@@ -4,6 +4,7 @@ import com.gamzebolat.Dto.DtoCart;
 import com.gamzebolat.Dto.DtoCartItem;
 import com.gamzebolat.entity.Cart;
 import com.gamzebolat.entity.CartItem;
+import com.gamzebolat.entity.Customer;
 import com.gamzebolat.entity.Product;
 import com.gamzebolat.repository.CartItemRepository;
 import com.gamzebolat.repository.CartRepository;
@@ -24,7 +25,7 @@ public class CartServiceImpl implements ICartService {
     private final ProductRepository productRepository;
     private final CartItemRepository cartItemRepository;
 
-    public CartServiceImpl(CartRepository cartRepository, CustomerRepository customerRepository, ProductRepository productRepository, CartItemRepository cartItemRepository) {
+    public CartServiceImpl(CartRepository cartRepository, ProductRepository productRepository, CartItemRepository cartItemRepository) {
         this.cartRepository = cartRepository;
         this.productRepository = productRepository;
         this.cartItemRepository = cartItemRepository;
@@ -155,4 +156,17 @@ public class CartServiceImpl implements ICartService {
         cart.setTotalPrice(0);
         cartRepository.save(cart);
     }
+
+    @Override
+    public Cart createCartForCustomer(Customer customer) {
+        Cart cart = new Cart();
+        cart.setTotalPrice(0.0);
+        cart.setCartItems(new ArrayList<>());
+        cart.setCustomer(customer);
+        customer.setCart(cart);
+
+        return cartRepository.save(cart);
+    }
+
+
 }

@@ -42,6 +42,6 @@ public class ProductController {
 
     @PostMapping(path = "/addCustomer")
     public DtoCustomer AddCustomer(@RequestBody Customer customer){
-        return customerFacade.AddCustomer(customer);
+        return customerFacade.addCustomer(customer);
     }
 }
