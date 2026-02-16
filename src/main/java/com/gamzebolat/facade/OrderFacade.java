@@ -6,7 +6,11 @@ import com.gamzebolat.entity.*;
 import com.gamzebolat.repository.CartRepository;
 import com.gamzebolat.repository.OrderRepository;
 import com.gamzebolat.repository.ProductRepository;
+import com.gamzebolat.service.impl.CartServiceImpl;
+import com.gamzebolat.service.impl.OrderServiceImpl;
+import com.gamzebolat.service.impl.ProductServiceImpl;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -14,86 +18,35 @@ import java.util.List;
 import java.util.UUID;
 
 @Service
+@Transactional
 public class OrderFacade {
 
-    private final OrderRepository orderRepository;
-    private final CartRepository cartRepository;
-    private final ProductRepository productRepository;
+    private final CartServiceImpl cartService;
+    private final OrderServiceImpl orderService;
+    private final ProductServiceImpl productService;
 
-    public OrderFacade(OrderRepository orderRepository, CartRepository cartRepository, ProductRepository productRepository) {
-        this.orderRepository = orderRepository;
-        this.cartRepository = cartRepository;
-        this.productRepository = productRepository;
+    public OrderFacade(
+            CartServiceImpl cartService,
+            OrderServiceImpl orderService,
+            ProductServiceImpl productService
+    ) {
+        this.cartService = cartService;
+        this.orderService = orderService;
+        this.productService = productService;
     }
 
     public DtoOrder placeOrder(int cartId) {
 
-        Cart cart = cartRepository.findById(cartId)
-                .orElseThrow(() -> new RuntimeException("Cart not found"));
+        Cart cart = cartService.getValidatedCart(cartId);
 
-        if (cart.getCartItems().isEmpty()) {
-            throw new RuntimeException("Cart is empty");
-        }
+        productService.checkStock(cart);
 
-        Order order = new Order();
-        order.setCustomer(cart.getCustomer());
-        order.setTotalPrice(cart.getTotalPrice());
-        order.setOrderDate(new Date());
-        order.setOrderCode(UUID.randomUUID().toString());
+        Order order = orderService.createOrderFromCart(cart);
 
-        List<OrderItem> orderItems = new ArrayList<>();
-        for (CartItem cartItem : cart.getCartItems()) {
-            Product product = productRepository.findById(
-                    cartItem.getProduct().getId()
-            ).orElseThrow(() -> new RuntimeException("Product not found"));
+        productService.decreaseStock(order.getOrderItems());
 
-            if (product.getStock() < cartItem.getQuantity()) {
-                throw new RuntimeException(
-                        product.getProductName() + " için yeterli stok yok"
-                );
-            }
-        }
+        cartService.clearCart(cart);
 
-        for (CartItem cartItem : cart.getCartItems()) {
-
-            Product product = productRepository.findById(
-                    cartItem.getProduct().getId()
-            ).orElseThrow();
-
-            product.setStock(product.getStock() - cartItem.getQuantity());
-            productRepository.save(product);
-
-            OrderItem orderItem = new OrderItem();
-            orderItem.setOrder(order);
-            orderItem.setProduct(product);
-            orderItem.setProductName(product.getProductName());
-            orderItem.setQuantity(cartItem.getQuantity());
-            orderItem.setUnitPrice(cartItem.getUnitPrice());
-
-            orderItems.add(orderItem);
-        }
-
-        order.setOrderItems(orderItems);
-        Order savedOrder = orderRepository.save(order);
-
-        // sepeti temizle
-        cart.getCartItems().clear();
-        cart.setTotalPrice(0);
-        cartRepository.save(cart);
-
-        DtoOrder dtoOrder = new DtoOrder();
-        dtoOrder.setTotalPrice(savedOrder.getTotalPrice());
-
-        List<DtoOrderItem> dtoItems = new ArrayList<>();
-        for (OrderItem oi : savedOrder.getOrderItems()) {
-            DtoOrderItem dtoItem = new DtoOrderItem();
-            dtoItem.setProductName(oi.getProductName());
-            dtoItem.setUnitPrice(oi.getUnitPrice());
-            dtoItem.setTotalPrice(oi.getUnitPrice() * oi.getQuantity());
-            dtoItems.add(dtoItem);
-        }
-
-        dtoOrder.setOrderItems(dtoItems);
-        return dtoOrder;
+        return orderService.convertToDto(order);
     }
 }

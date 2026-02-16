@@ -168,5 +168,23 @@ public class CartServiceImpl implements ICartService {
         return cartRepository.save(cart);
     }
 
+    @Override
+    public Cart getValidatedCart(int cartId) {
+        Cart cart = cartRepository.findById(cartId)
+                .orElseThrow(() -> new RuntimeException("Cart not found"));
+
+        if (cart.getCartItems().isEmpty()) {
+            throw new RuntimeException("Cart is empty");
+        }
+        return cart;
+    }
+
+    @Override
+    public void clearCart(Cart cart) {
+        cart.getCartItems().clear();
+        cart.setTotalPrice(0);
+        cartRepository.save(cart);
+    }
+
 
 }

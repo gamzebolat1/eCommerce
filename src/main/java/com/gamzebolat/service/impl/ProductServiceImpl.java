@@ -2,9 +2,7 @@ package com.gamzebolat.service.impl;
 
 import com.gamzebolat.Dto.DtoCustomer;
 import com.gamzebolat.Dto.DtoProduct;
-import com.gamzebolat.entity.Cart;
-import com.gamzebolat.entity.Customer;
-import com.gamzebolat.entity.Product;
+import com.gamzebolat.entity.*;
 import com.gamzebolat.repository.CartRepository;
 import com.gamzebolat.repository.CustomerRepository;
 import com.gamzebolat.repository.ProductRepository;
@@ -14,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -83,6 +82,29 @@ public class ProductServiceImpl implements IProductService {
         }
     }
 
+    @Override
+    public void checkStock(Cart cart) {
+        for (CartItem item : cart.getCartItems()) {
+            Product product = productRepository.findById(
+                    item.getProduct().getId()
+            ).orElseThrow(() -> new RuntimeException("Product not found"));
+
+            if (product.getStock() < item.getQuantity()) {
+                throw new RuntimeException(
+                        product.getProductName() + " için yeterli stok yok"
+                );
+            }
+        }
+    }
+
+    @Override
+    public void decreaseStock(List<OrderItem> orderItems) {
+        for (OrderItem item : orderItems) {
+            Product product = item.getProduct();
+            product.setStock(product.getStock() - item.getQuantity());
+            productRepository.save(product);
+        }
+    }
 
 
 }

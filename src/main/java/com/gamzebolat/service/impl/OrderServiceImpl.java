@@ -18,19 +18,13 @@ import java.util.*;
 @Service
 public class OrderServiceImpl implements IOrderService {
     private final OrderRepository orderRepository;
-    private final CartRepository cartRepository;
     private final CustomerRepository customerRepository;
-    private final ProductRepository productRepository;
 
-    public OrderServiceImpl(OrderRepository orderRepository, CartRepository cartRepository, CustomerRepository customerRepository, ProductRepository productRepository) {
+
+    public OrderServiceImpl(OrderRepository orderRepository, CustomerRepository customerRepository) {
         this.orderRepository = orderRepository;
-        this.cartRepository = cartRepository;
         this.customerRepository = customerRepository;
-        this.productRepository = productRepository;
     }
-
-
-
 
     @Override
     public DtoOrder getOrderForCode(String orderCode) {
@@ -89,5 +83,47 @@ public class OrderServiceImpl implements IOrderService {
 
         return dtoOrders;
     }
+
+    @Override
+    public Order createOrderFromCart(Cart cart) {
+        Order order = new Order();
+        order.setCustomer(cart.getCustomer());
+        order.setTotalPrice(cart.getTotalPrice());
+        order.setOrderDate(new Date());
+        order.setOrderCode(UUID.randomUUID().toString());
+
+        List<OrderItem> orderItems = new ArrayList<>();
+
+        for (CartItem cartItem : cart.getCartItems()) {
+            OrderItem orderItem = new OrderItem();
+            orderItem.setOrder(order);
+            orderItem.setProduct(cartItem.getProduct());
+            orderItem.setProductName(cartItem.getProduct().getProductName());
+            orderItem.setQuantity(cartItem.getQuantity());
+            orderItem.setUnitPrice(cartItem.getUnitPrice());
+            orderItems.add(orderItem);
+        }
+
+        order.setOrderItems(orderItems);
+        return orderRepository.save(order);
+    }
+
+    public DtoOrder convertToDto(Order order) {
+
+        DtoOrder dtoOrder = new DtoOrder();
+        dtoOrder.setTotalPrice(order.getTotalPrice());
+
+        List<DtoOrderItem> items = new ArrayList<>();
+        for (OrderItem oi : order.getOrderItems()) {
+            DtoOrderItem dto = new DtoOrderItem();
+            dto.setProductName(oi.getProductName());
+            dto.setUnitPrice(oi.getUnitPrice());
+            dto.setTotalPrice(oi.getUnitPrice() * oi.getQuantity());
+            items.add(dto);
+        }
+        dtoOrder.setOrderItems(items);
+        return dtoOrder;
+    }
+
 
 }

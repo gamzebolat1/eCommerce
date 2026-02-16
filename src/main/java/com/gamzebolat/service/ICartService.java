@@ -11,4 +11,6 @@ public DtoCart AddProductToCart(int cartId,int productId);
 public void removeProductFromCart(int cartId, int productId);
 public void emptyCart(int cartId);
 public Cart createCartForCustomer(Customer customer);
+    public Cart getValidatedCart(int cartId);
+    public void clearCart(Cart cart);
 }
