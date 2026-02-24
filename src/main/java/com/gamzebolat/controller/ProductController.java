@@ -1,37 +1,36 @@
 package com.gamzebolat.controller;
 
-import com.gamzebolat.Dto.DtoCustomer;
-import com.gamzebolat.Dto.DtoProduct;
+import com.gamzebolat.Dto.CustomerDto;
+import com.gamzebolat.Dto.ProductDto;
 import com.gamzebolat.entity.Customer;
 import com.gamzebolat.entity.Product;
 import com.gamzebolat.facade.CustomerFacade;
 import com.gamzebolat.service.impl.ProductServiceImpl;
+import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("/api/product")
 public class ProductController {
     private final ProductServiceImpl productService;
     private final CustomerFacade customerFacade;
 
 
-    public ProductController(ProductServiceImpl productService, CustomerFacade customerFacade) {
-        this.productService = productService;
-        this.customerFacade = customerFacade;
-    }
-
     @PostMapping(path = "/create")
-    public DtoProduct createProduct(@RequestBody Product product){
+    public ProductDto createProduct(@RequestBody Product product){
         return productService.createProduct(product);
     }
 
     @GetMapping(path = "/get/{id}")
-    public DtoProduct getProduct(@PathVariable(name="id") int Id){
+    public ProductDto getProduct(@PathVariable(name="id") int Id){
         return  productService.getProduct(Id);
     }
 
     @PutMapping(path = "/update/{id}")
-    public DtoProduct updateProduct(@PathVariable(name="id") int Id ,@RequestBody Product newProduct){
+    public ProductDto updateProduct(@PathVariable(name="id") int Id , @RequestBody Product newProduct){
         return  productService.updateProduct(Id,newProduct);
     }
 
@@ -41,7 +40,12 @@ public class ProductController {
     }
 
     @PostMapping(path = "/addCustomer")
-    public DtoCustomer AddCustomer(@RequestBody Customer customer){
+    public CustomerDto AddCustomer(@RequestBody Customer customer){
         return customerFacade.addCustomer(customer);
+    }
+
+    @GetMapping(path="/getAll")
+    public List<ProductDto> getAllProducts(){
+        return productService.getAllProducts();
     }
 }

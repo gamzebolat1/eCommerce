@@ -1,17 +1,17 @@
 package com.gamzebolat.service.impl;
 
-import com.gamzebolat.Dto.DtoCart;
-import com.gamzebolat.Dto.DtoCartItem;
+import com.gamzebolat.Dto.CartDto;
+import com.gamzebolat.Dto.CartItemDto;
 import com.gamzebolat.entity.Cart;
 import com.gamzebolat.entity.CartItem;
 import com.gamzebolat.entity.Customer;
 import com.gamzebolat.entity.Product;
+import com.gamzebolat.mapper.CartMapper;
 import com.gamzebolat.repository.CartItemRepository;
 import com.gamzebolat.repository.CartRepository;
-import com.gamzebolat.repository.CustomerRepository;
 import com.gamzebolat.repository.ProductRepository;
 import com.gamzebolat.service.ICartService;
-import org.springframework.beans.BeanUtils;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -19,64 +19,41 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
+@RequiredArgsConstructor
 public class CartServiceImpl implements ICartService {
 
     private final CartRepository cartRepository;
     private final ProductRepository productRepository;
     private final CartItemRepository cartItemRepository;
+    private final CartMapper cartMapper;
 
-    public CartServiceImpl(CartRepository cartRepository, ProductRepository productRepository, CartItemRepository cartItemRepository) {
-        this.cartRepository = cartRepository;
-        this.productRepository = productRepository;
-        this.cartItemRepository = cartItemRepository;
-    }
 
     @Override
-    public DtoCart getCart(int id) {
+    public CartDto getCart(int id) {
 
         Cart cart = cartRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Cart not found"));
 
-        DtoCart dtoCart = new DtoCart();
-        dtoCart.setTotalPrice(cart.getTotalPrice());
-
-        List<DtoCartItem> dtoItems = new ArrayList<>();
-        for (CartItem cartItem : cart.getCartItems()) {
-            DtoCartItem dtoItem = new DtoCartItem();
-            dtoItem.setProductName(cartItem.getProduct().getProductName());
-            dtoItem.setQuantity(cartItem.getQuantity());
-            dtoItem.setUnitPrice(cartItem.getUnitPrice());
-            dtoItems.add(dtoItem);
-        }
-
-        dtoCart.setCartItems(dtoItems);
-        return dtoCart;
+        return cartMapper.toCartDto(cart);
     }
 
-
     @Override
-    public DtoCart AddProductToCart(int cartId,int productId) {
+    public CartDto AddProductToCart(int cartId, int productId) {
         Cart cart = cartRepository.findById(cartId)
                 .orElseThrow(() -> new RuntimeException("Cart not found"));
 
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new RuntimeException("Product not found"));
 
-        if (product.getStock() <= 0) {
+        if (product.getStock() < 1) {
             throw new RuntimeException("Product stock is empty");
         }
 
         Optional<CartItem> cartItemOpt = cartItemRepository.findByCartAndProduct(cart, product);
 
-        double totalPrice = 0;
-
         if (cartItemOpt.isPresent()) {
-            CartItem cartItem = cartItemOpt.get();
-            cartItem.setQuantity(cartItem.getQuantity() + 1);
-            cartItemRepository.save(cartItem);
-
-
-        } else {
+            return cartMapper.toCartDto(cart);
+        }
             CartItem cartItem = new CartItem();
             cartItem.setCart(cart);
             cartItem.setProduct(product);
@@ -85,30 +62,13 @@ public class CartServiceImpl implements ICartService {
             cart.getCartItems().add(cartItem);
             cartItemRepository.save(cartItem);
 
-
-        }
-
-        for (CartItem item : cart.getCartItems()) {
-            totalPrice += item.getQuantity() * item.getUnitPrice();
-        }
+        double totalPrice = cart.getCartItems().stream()
+                .mapToDouble(item -> item.getQuantity() * item.getUnitPrice())
+                .sum();
 
         cart.setTotalPrice(totalPrice);
         cartRepository.save(cart);
-
-        DtoCart dto = new DtoCart();
-        dto.setTotalPrice(cart.getTotalPrice());
-
-        List<DtoCartItem> dtoItems = new ArrayList<>();
-        for (CartItem ci : cart.getCartItems()) {
-            DtoCartItem dtoItem = new DtoCartItem();
-            dtoItem.setProductName(ci.getProduct().getProductName());
-            dtoItem.setQuantity(ci.getQuantity());
-            dtoItem.setUnitPrice(ci.getUnitPrice());
-            dtoItems.add(dtoItem);
-        }
-
-        dto.setCartItems(dtoItems);
-        return dto;
+        return cartMapper.toCartDto(cart);
     }
 
     @Override
@@ -134,11 +94,10 @@ public class CartServiceImpl implements ICartService {
         }
 
 
-        List<CartItem> items = cartItemRepository.findAllByCart(cart);
-        double totalPrice = 0;
-        for (CartItem item : items) {
-            totalPrice += item.getQuantity() * item.getUnitPrice();
-        }
+        double totalPrice = cartItemRepository.findAllByCart(cart)
+                .stream()
+                .mapToDouble(item -> item.getQuantity() * item.getUnitPrice())
+                .sum();
 
         cart.setTotalPrice(totalPrice);
         cartRepository.save(cart);
@@ -186,5 +145,64 @@ public class CartServiceImpl implements ICartService {
         cartRepository.save(cart);
     }
 
+    @Override
+    public CartDto increaseQuantity(int cartId, int productId) {
+        Cart cart = cartRepository.findById(cartId)
+                .orElseThrow(() -> new RuntimeException("Cart not found"));
+
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new RuntimeException("Product not found"));
+
+        CartItem cartItem = cartItemRepository
+                .findByCartAndProduct(cart, product)
+                .orElseThrow(() -> new RuntimeException("Product not found in cart"));
+
+        if (cartItem.getQuantity() + 1 > product.getStock()) {
+            throw new RuntimeException("Not enough stock");
+        }
+        cartItem.setQuantity(cartItem.getQuantity() + 1);
+        cartItemRepository.save(cartItem);
+
+        double totalPrice = cart.getCartItems().stream()
+                .mapToDouble(item -> item.getQuantity() * item.getUnitPrice())
+                .sum();
+
+        cart.setTotalPrice(totalPrice);
+        cartRepository.save(cart);
+
+        return cartMapper.toCartDto(cart);
+    }
+
+    @Override
+    public CartDto decreaseQuantity(int cartId, int productId) {
+        Cart cart = cartRepository.findById(cartId)
+                .orElseThrow(() -> new RuntimeException("Cart not found"));
+
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new RuntimeException("Product not found"));
+
+        CartItem cartItem = cartItemRepository
+                .findByCartAndProduct(cart, product)
+                .orElseThrow(() -> new RuntimeException("Product not found in cart"));
+
+        if (cartItem.getQuantity() > 1) {
+            cartItem.setQuantity(cartItem.getQuantity() - 1);
+            cartItemRepository.save(cartItem);
+        } else {
+            // Bir ürün varsa
+            cart.getCartItems().remove(cartItem);
+            cartItemRepository.delete(cartItem);
+        }
+
+
+        double totalPrice = cart.getCartItems().stream()
+                .mapToDouble(item -> item.getQuantity() * item.getUnitPrice())
+                .sum();
+
+        cart.setTotalPrice(totalPrice);
+        cartRepository.save(cart);
+
+        return cartMapper.toCartDto(cart);
+    }
 
 }

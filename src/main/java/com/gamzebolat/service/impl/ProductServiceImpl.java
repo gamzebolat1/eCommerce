@@ -1,77 +1,62 @@
 package com.gamzebolat.service.impl;
 
-import com.gamzebolat.Dto.DtoCustomer;
-import com.gamzebolat.Dto.DtoProduct;
+import com.gamzebolat.Dto.ProductDto;
 import com.gamzebolat.entity.*;
-import com.gamzebolat.repository.CartRepository;
-import com.gamzebolat.repository.CustomerRepository;
+import com.gamzebolat.mapper.ProductMapper;
 import com.gamzebolat.repository.ProductRepository;
 import com.gamzebolat.service.IProductService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 @Service
+@RequiredArgsConstructor
 public class ProductServiceImpl implements IProductService {
     private final ProductRepository productRepository;
-    private final CustomerRepository customerRepository;
-
-
-    public ProductServiceImpl(ProductRepository productRepository, CustomerRepository customerRepository, CartRepository cartRepository) {
-        this.productRepository = productRepository;
-        this.customerRepository = customerRepository;
-
-    }
-
+    private final ProductMapper productMapper;
 
     @Override
-    public DtoProduct createProduct(Product product) {
+    public ProductDto createProduct(Product product) {
         Product newProduct=new Product();
         newProduct.setProductName(product.getProductName());
         newProduct.setStock(product.getStock());
         newProduct.setPrice(product.getPrice());
         Product savedProduct = productRepository.save(newProduct);
 
-        DtoProduct dtoProduct=new DtoProduct();
-        BeanUtils.copyProperties(savedProduct,dtoProduct);
-        return dtoProduct;
-
+        ProductDto productDto =productMapper.toProductDto(savedProduct);
+        return productDto;
     }
 
     @Override
-    public DtoProduct getProduct(int Id) {
-    Optional<Product> optional=productRepository.findById(Id);
-    DtoProduct dtoProduct=new DtoProduct();
-    BeanUtils.copyProperties(optional.get(),dtoProduct);
-        return dtoProduct;
+    public ProductDto getProduct(int Id) {
+        Product product = productRepository.findById(Id)
+                .orElseThrow(() -> new RuntimeException("Product not found"));
+
+        return productMapper.toProductDto(product);
     }
 
     @Override
-    public DtoProduct updateProduct(int Id , Product newProduct) {
-        Optional<Product> optional=productRepository.findById(Id);
+    public ProductDto updateProduct(int Id , Product newProduct) {
+        Product product = productRepository.findById(Id)
+                .orElseThrow(() -> new RuntimeException("Product not found"));
 
-        if(optional.isPresent()){
-            Product product=optional.get();
-            if(newProduct.getProductName()!=null){
-                product.setProductName(newProduct.getProductName());
-            }
-
-            if(newProduct.getPrice()!=null) {
-                product.setPrice(newProduct.getPrice());
-            }
-            if(newProduct.getStock()!=null){
-                product.setStock(newProduct.getStock());
-            }
-            Product updatedProduct = productRepository.save(product);
-            DtoProduct dtoProduct=new DtoProduct();
-            BeanUtils.copyProperties(updatedProduct,dtoProduct);
-            return  dtoProduct;
+        if (newProduct.getProductName() != null) {
+            product.setProductName(newProduct.getProductName());
         }
-        return null;
+
+        if (newProduct.getPrice() != null) {
+            product.setPrice(newProduct.getPrice());
+        }
+
+        if (newProduct.getStock() != null) {
+            product.setStock(newProduct.getStock());
+        }
+        Product updatedProduct = productRepository.save(product);
+        return productMapper.toProductDto(updatedProduct);
+
     }
 
     @Override
@@ -104,6 +89,12 @@ public class ProductServiceImpl implements IProductService {
             product.setStock(product.getStock() - item.getQuantity());
             productRepository.save(product);
         }
+    }
+
+    @Override
+    public List<ProductDto> getAllProducts() {
+        List<Product> products = productRepository.findAll();
+        return productMapper.toProductDtoList(products);
     }
 
 

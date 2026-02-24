@@ -7,8 +7,8 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class DtoProduct
-{
+public class CartItemDto {
+    private int quantity;
+    private double unitPrice;
     private String productName;
-    private Double price;
 }

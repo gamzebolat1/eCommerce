@@ -1,23 +1,16 @@
 package com.gamzebolat.facade;
 
-import com.gamzebolat.Dto.DtoOrder;
-import com.gamzebolat.Dto.DtoOrderItem;
+import com.gamzebolat.Dto.OrderDto;
 import com.gamzebolat.entity.*;
-import com.gamzebolat.repository.CartRepository;
-import com.gamzebolat.repository.OrderRepository;
-import com.gamzebolat.repository.ProductRepository;
 import com.gamzebolat.service.impl.CartServiceImpl;
 import com.gamzebolat.service.impl.OrderServiceImpl;
 import com.gamzebolat.service.impl.ProductServiceImpl;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.UUID;
-
 @Service
+@RequiredArgsConstructor
 @Transactional
 public class OrderFacade {
 
@@ -25,17 +18,8 @@ public class OrderFacade {
     private final OrderServiceImpl orderService;
     private final ProductServiceImpl productService;
 
-    public OrderFacade(
-            CartServiceImpl cartService,
-            OrderServiceImpl orderService,
-            ProductServiceImpl productService
-    ) {
-        this.cartService = cartService;
-        this.orderService = orderService;
-        this.productService = productService;
-    }
 
-    public DtoOrder placeOrder(int cartId) {
+    public OrderDto placeOrder(int cartId) {
 
         Cart cart = cartService.getValidatedCart(cartId);
 
