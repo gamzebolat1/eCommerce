@@ -21,6 +21,17 @@ public class OrderServiceImpl implements IOrderService {
     private final CustomerRepository customerRepository;
     private final OrderMapper orderMapper;
 
+    private double calculateOrderItemTotalPrice(OrderItem orderItem) {
+        return orderItem.getUnitPrice() * orderItem.getQuantity();
+    }
+
+
+    private double calculateOrderTotalPrice(Order order) {
+        return order.getOrderItems().stream()
+                .mapToDouble(this::calculateOrderItemTotalPrice)
+                .sum();
+    }
+
     @Override
     public OrderDto getOrderForCode(String orderCode) {
         Optional<Order> optionalOrder = orderRepository.findByOrderCode(orderCode);
@@ -30,24 +41,18 @@ public class OrderServiceImpl implements IOrderService {
         }
         Order order = optionalOrder.get();
 
-
         OrderDto orderDto = orderMapper.toOrderDto(order);
 
-
-        if(order.getOrderItems() != null){
-            if (orderDto.getOrderItems() == null) {
-                orderDto.setOrderItems(new ArrayList<>());
-            }
             List<OrderItemDto> itemDtos = order.getOrderItems().stream()
                     .map(orderItem -> {
                         OrderItemDto dto = orderMapper.toOrderItemDto(orderItem);
-                        dto.setTotalPrice(orderItem.getUnitPrice() * orderItem.getQuantity());
+                        dto.setTotalPrice(calculateOrderItemTotalPrice(orderItem));
                         return dto;
                     })
                     .toList();
 
             orderDto.setOrderItems(itemDtos);
-        }
+            orderDto.setTotalPrice(calculateOrderTotalPrice(order));
         return orderDto;
     }
 
@@ -64,12 +69,12 @@ public class OrderServiceImpl implements IOrderService {
         List<OrderDto> orderDtos = orders.stream()
                 .map(order -> {
                     OrderDto orderDto = orderMapper.toOrderDto(order);
-                    orderDto.setTotalPrice(order.getTotalPrice());
+                    orderDto.setTotalPrice(calculateOrderTotalPrice(order));
 
                     List<OrderItemDto> items = order.getOrderItems().stream()
                             .map(oi -> {
                                 OrderItemDto dto = orderMapper.toOrderItemDto(oi);
-                                dto.setTotalPrice(oi.getUnitPrice() * oi.getQuantity());
+                                dto.setTotalPrice(calculateOrderItemTotalPrice(oi));
                                 return dto;
                             })
                             .toList();
@@ -107,18 +112,16 @@ public class OrderServiceImpl implements IOrderService {
     public OrderDto convertToDto(Order order) {
 
         OrderDto orderDto = orderMapper.toOrderDto(order);
-        orderDto.setTotalPrice(order.getTotalPrice());
+        orderDto.setTotalPrice(calculateOrderTotalPrice(order));
 
         List<OrderItemDto> items = new ArrayList<>();
 
         for (OrderItem oi : order.getOrderItems()) {
             OrderItemDto dto = orderMapper.toOrderItemDto(oi);
-            dto.setTotalPrice(oi.getUnitPrice() * oi.getQuantity());
+            dto.setTotalPrice(calculateOrderItemTotalPrice(oi));
             items.add(dto);
         }
         orderDto.setOrderItems(items);
         return orderDto;
     }
-
-
 }
