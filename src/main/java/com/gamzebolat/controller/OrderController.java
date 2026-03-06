@@ -1,7 +1,7 @@
 package com.gamzebolat.controller;
 
 import com.gamzebolat.Dto.OrderDto;
-import com.gamzebolat.facade.OrderFacade;
+import com.gamzebolat.facade.OrderFacadeImpl;
 import com.gamzebolat.service.IOrderService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -13,7 +13,7 @@ import java.util.List;
 @RequestMapping("/api/orders")
 public class OrderController {
     private final IOrderService orderService;
-    private final OrderFacade orderFacade;
+    private final OrderFacadeImpl orderFacade;
 
 
     @PostMapping("/placeOrder/{cartId}")

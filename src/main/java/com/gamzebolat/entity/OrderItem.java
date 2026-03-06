@@ -14,7 +14,7 @@ import lombok.NoArgsConstructor;
 public class OrderItem extends BaseEntity {
 
     @ManyToOne
-    @JsonBackReference  // ✅ Eklendi - Child tarafı (JSON'da gösterilmez)
+    @JsonBackReference
     private Order order;
 
     @ManyToOne

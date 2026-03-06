@@ -20,14 +20,9 @@ public class ProductServiceImpl implements IProductService {
 
     @Override
     public ProductDto createProduct(Product product) {
-        Product newProduct=new Product();
-        newProduct.setProductName(product.getProductName());
-        newProduct.setStock(product.getStock());
-        newProduct.setPrice(product.getPrice());
+        Product newProduct = productMapper.fromDto(product);
         Product savedProduct = productRepository.save(newProduct);
-
-        ProductDto productDto =productMapper.toProductDto(savedProduct);
-        return productDto;
+        return productMapper.toProductDto(savedProduct);
     }
 
     @Override
@@ -53,6 +48,7 @@ public class ProductServiceImpl implements IProductService {
 
         if (newProduct.getStock() != null) {
             product.setStock(newProduct.getStock());
+            product.setActive(newProduct.getStock() > 0);
         }
         Product updatedProduct = productRepository.save(product);
         return productMapper.toProductDto(updatedProduct);
@@ -74,6 +70,12 @@ public class ProductServiceImpl implements IProductService {
                     item.getProduct().getId()
             ).orElseThrow(() -> new RuntimeException("Product not found"));
 
+            if (!product.getActive()) {
+                throw new RuntimeException(
+                        product.getProductName() + " şu anda satışta değil"
+                );
+            }
+
             if (product.getStock() < item.getQuantity()) {
                 throw new RuntimeException(
                         product.getProductName() + " için yeterli stok yok"
@@ -86,16 +88,24 @@ public class ProductServiceImpl implements IProductService {
     public void decreaseStock(List<OrderItem> orderItems) {
         for (OrderItem item : orderItems) {
             Product product = item.getProduct();
-            product.setStock(product.getStock() - item.getQuantity());
+            int newStock=product.getStock() - item.getQuantity();
+            product.setStock(newStock);
+            if (newStock <= 0) {
+                product.setActive(false);
+            }
             productRepository.save(product);
         }
     }
 
     @Override
     public List<ProductDto> getAllProducts() {
-        List<Product> products = productRepository.findAll();
+        List<Product> products = productRepository.findAllByActiveTrue();
         return productMapper.toProductDtoList(products);
     }
-
-
+    private String generateProductCode() {
+        return "PRD-" + java.util.UUID.randomUUID()
+                .toString()
+                .substring(0,6)
+                .toUpperCase();
+    }
 }

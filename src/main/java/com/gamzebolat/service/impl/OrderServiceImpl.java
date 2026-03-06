@@ -88,25 +88,9 @@ public class OrderServiceImpl implements IOrderService {
 
     @Override
     public Order createOrderFromCart(Cart cart) {
-        Order order = new Order();
-        order.setCustomer(cart.getCustomer());
-        order.setTotalPrice(cart.getTotalPrice());
-        order.setOrderDate(new Date());
-        order.setOrderCode(UUID.randomUUID().toString());
-        List<OrderItem> orderItems = cart.getCartItems().stream()
-                .map(cartItem -> {
-                    OrderItem orderItem = new OrderItem();
-                    orderItem.setOrder(order);
-                    orderItem.setProduct(cartItem.getProduct());
-                    orderItem.setProductName(cartItem.getProduct().getProductName());
-                    orderItem.setQuantity(cartItem.getQuantity());
-                    orderItem.setUnitPrice(cartItem.getUnitPrice());
-                    return orderItem;
-                })
-                .toList();
+            Order order = orderMapper.fromCart(cart);
+            return orderRepository.save(order);
 
-        order.setOrderItems(orderItems);
-        return orderRepository.save(order);
     }
 
     public OrderDto convertToDto(Order order) {

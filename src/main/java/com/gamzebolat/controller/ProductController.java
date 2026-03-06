@@ -4,7 +4,7 @@ import com.gamzebolat.Dto.CustomerDto;
 import com.gamzebolat.Dto.ProductDto;
 import com.gamzebolat.entity.Customer;
 import com.gamzebolat.entity.Product;
-import com.gamzebolat.facade.CustomerFacade;
+import com.gamzebolat.facade.CustomerFacadeImpl;
 import com.gamzebolat.service.impl.ProductServiceImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -16,7 +16,7 @@ import java.util.List;
 @RequestMapping("/api/product")
 public class ProductController {
     private final ProductServiceImpl productService;
-    private final CustomerFacade customerFacade;
+    private final CustomerFacadeImpl customerFacade;
 
 
     @PostMapping(path = "/create")
@@ -24,11 +24,10 @@ public class ProductController {
         return productService.createProduct(product);
     }
 
-    @GetMapping(path = "/get/{id}")
-    public ProductDto getProduct(@PathVariable(name="id") int Id){
-        return  productService.getProduct(Id);
+    @GetMapping(path = "/get")
+    public ProductDto getProduct(@RequestParam(name = "id") int Id){
+        return productService.getProduct(Id);
     }
-
     @PutMapping(path = "/update/{id}")
     public ProductDto updateProduct(@PathVariable(name="id") int Id , @RequestBody Product newProduct){
         return  productService.updateProduct(Id,newProduct);

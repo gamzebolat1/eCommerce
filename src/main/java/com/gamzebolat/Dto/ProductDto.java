@@ -11,4 +11,5 @@ public class ProductDto
 {
     private String productName;
     private Double price;
+    private String productCode;
 }

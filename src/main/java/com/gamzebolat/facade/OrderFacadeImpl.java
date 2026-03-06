@@ -2,6 +2,7 @@ package com.gamzebolat.facade;
 
 import com.gamzebolat.Dto.OrderDto;
 import com.gamzebolat.entity.*;
+import com.gamzebolat.mapper.OrderMapper;
 import com.gamzebolat.service.impl.CartServiceImpl;
 import com.gamzebolat.service.impl.OrderServiceImpl;
 import com.gamzebolat.service.impl.ProductServiceImpl;
@@ -12,12 +13,12 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 @Transactional
-public class OrderFacade {
+public class OrderFacadeImpl implements com.gamzebolat.facade.impl.IOrderFacade {
 
     private final CartServiceImpl cartService;
     private final OrderServiceImpl orderService;
     private final ProductServiceImpl productService;
-
+    private final OrderMapper orderMapper;
 
     public OrderDto placeOrder(int cartId) {
 
@@ -31,6 +32,6 @@ public class OrderFacade {
 
         cartService.clearCart(cart);
 
-        return orderService.convertToDto(order);
+        return orderMapper.toOrderDto(order);
     }
 }

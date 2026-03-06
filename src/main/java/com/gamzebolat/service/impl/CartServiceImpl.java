@@ -65,11 +65,7 @@ public class CartServiceImpl implements ICartService {
             existingItem.setQuantity(existingItem.getQuantity() + quantity);
             cartItemRepository.save(existingItem);
         } else {
-            CartItem cartItem = new CartItem();
-            cartItem.setCart(cart);
-            cartItem.setProduct(product);
-            cartItem.setQuantity(quantity);
-            cartItem.setUnitPrice(product.getPrice());
+            CartItem cartItem = cartMapper.toCartItem(cart, product, quantity);
             cart.getCartItems().add(cartItem);
             cartItemRepository.save(cartItem);
         }
@@ -121,12 +117,8 @@ public class CartServiceImpl implements ICartService {
 
     @Override
     public Cart createCartForCustomer(Customer customer) {
-        Cart cart = new Cart();
-        cart.setTotalPrice(0.0);
-        cart.setCartItems(new ArrayList<>());
-        cart.setCustomer(customer);
+        Cart cart = cartMapper.fromCustomer(customer);
         customer.setCart(cart);
-
         return cartRepository.save(cart);
     }
 
