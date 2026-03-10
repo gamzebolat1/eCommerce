@@ -1,7 +1,7 @@
 package com.gamzebolat.controller;
 
 import com.gamzebolat.Dto.OrderDto;
-import com.gamzebolat.facade.OrderFacadeImpl;
+import com.gamzebolat.facade.impl.OrderFacadeImpl;
 import com.gamzebolat.service.IOrderService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;

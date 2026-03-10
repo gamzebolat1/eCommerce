@@ -4,12 +4,11 @@ import com.gamzebolat.Dto.CustomerDto;
 import com.gamzebolat.Dto.ProductDto;
 import com.gamzebolat.entity.Customer;
 import com.gamzebolat.entity.Product;
-import com.gamzebolat.facade.CustomerFacadeImpl;
+import com.gamzebolat.facade.impl.CustomerFacadeImpl;
 import com.gamzebolat.service.impl.ProductServiceImpl;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -44,7 +43,8 @@ public class ProductController {
     }
 
     @GetMapping(path="/getAll")
-    public List<ProductDto> getAllProducts(){
-        return productService.getAllProducts();
+    public Page<ProductDto> getAllProducts(@RequestParam int page,
+                                           @RequestParam int size){
+        return productService.getAllProducts(page,size);
     }
 }

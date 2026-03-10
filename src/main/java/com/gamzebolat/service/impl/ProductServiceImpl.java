@@ -6,7 +6,9 @@ import com.gamzebolat.mapper.ProductMapper;
 import com.gamzebolat.repository.ProductRepository;
 import com.gamzebolat.service.IProductService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.BeanUtils;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -98,10 +100,17 @@ public class ProductServiceImpl implements IProductService {
     }
 
     @Override
-    public List<ProductDto> getAllProducts() {
-        List<Product> products = productRepository.findAllByActiveTrue();
-        return productMapper.toProductDtoList(products);
+    public Page<ProductDto> getAllProducts(int page, int size) {
+        //Once sayfalama bilgisi olustur - kacıncı sayfa ve her sayfada kac bilgi olacak
+        Pageable pageable = PageRequest.of(page, size);
+
+        Page<Product> products = productRepository.findAllByActiveTrue(pageable);
+
+        //her product icin toProductDto calistir
+        return products.map(productMapper::toProductDto);
     }
+
+
     private String generateProductCode() {
         return "PRD-" + java.util.UUID.randomUUID()
                 .toString()

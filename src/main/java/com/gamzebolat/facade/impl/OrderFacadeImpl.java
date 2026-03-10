@@ -1,7 +1,8 @@
-package com.gamzebolat.facade;
+package com.gamzebolat.facade.impl;
 
 import com.gamzebolat.Dto.OrderDto;
 import com.gamzebolat.entity.*;
+import com.gamzebolat.facade.IOrderFacade;
 import com.gamzebolat.mapper.OrderMapper;
 import com.gamzebolat.service.impl.CartServiceImpl;
 import com.gamzebolat.service.impl.OrderServiceImpl;
@@ -13,7 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 @Transactional
-public class OrderFacadeImpl implements com.gamzebolat.facade.impl.IOrderFacade {
+public class OrderFacadeImpl implements IOrderFacade {
 
     private final CartServiceImpl cartService;
     private final OrderServiceImpl orderService;

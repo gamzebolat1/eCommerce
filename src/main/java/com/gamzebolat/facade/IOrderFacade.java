@@ -1,4 +1,4 @@
-package com.gamzebolat.facade.impl;
+package com.gamzebolat.facade;
 
 import com.gamzebolat.Dto.OrderDto;
 
